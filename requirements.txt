@@ -1,0 +1,27 @@
+# ChiralGraph-RAG Dependencies
+# Core Cheminformatics & Scientific Computing
+rdkit>=2023.9.1
+numpy>=1.24.0
+scipy>=1.10.0
+networkx>=3.1
+
+# Graph Database
+neo4j>=5.15.0
+
+# Vector Database
+qdrant-client>=1.7.0
+
+# API & Web Framework
+fastapi>=0.109.0
+uvicorn>=0.27.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+python-dotenv>=1.0.0
+
+# Utilities & Networking
+httpx>=0.26.0
+tqdm>=4.66.0
+
+# Testing & Evaluation
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
