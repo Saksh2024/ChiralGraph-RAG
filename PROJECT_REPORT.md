@@ -1,9 +1,3 @@
-# 🎓 PROJECT REPORT: ChiralGraph-RAG
-
----
-
-# ChiralGraph-RAG: A 3D Conformation and Stereoisomer-Aware Hybrid GraphRAG Engine for Precision Drug Discovery
-
 **Degree Program:** Bachelor of Technology / Master of Technology in Computer Science & Engineering (Specialization in Artificial Intelligence & Machine Learning)  
 **Course:** Major Project / Capstone Project (MTP)  
 **Laboratory:** Machine Learning & Computational Biology Research Group  
@@ -14,7 +8,7 @@
 
 ---
 
-## 📑 TABLE OF CONTENTS
+## TABLE OF CONTENTS
 
 1. [Abstract & Executive Summary](#abstract--executive-summary)
 2. [Chapter 1: Introduction & Problem Statement](#chapter-1-introduction--problem-statement)
@@ -209,15 +203,15 @@ ChiralGraph-RAG directly implements and synergizes the architectures proposed in
 ├────────────────────────────────────────────────────────────────────────┤
 │ 1. Pan et al. (IEEE TKDE, arXiv:2306.08302)                            │
 │    "Unifying Large Language Models and Knowledge Graphs: A Roadmap"    │
-│    ➜ Provided the "KG-enhanced LLM" paradigm for factual grounding.    │
+│    -> Provided the "KG-enhanced LLM" paradigm for factual grounding.   │
 ├────────────────────────────────────────────────────────────────────────┤
 │ 2. Sun et al. (ICLR 2024, arXiv:2307.07697)                           │
 │    "Think-on-Graph (ToG): Deep and Responsible Reasoning of LLM on KG" │
-│    ➜ Provided the multi-hop beam traversal and path-pruning protocol.  │
+│    -> Provided the multi-hop beam traversal and path-pruning protocol. │
 ├────────────────────────────────────────────────────────────────────────┤
 │ 3. Wen et al. (arXiv:2308.09729)                                       │
 │    "MindMap: Knowledge Graph Prompting Sparks Graph of Thoughts"       │
-│    ➜ Provided the subgraph-to-prompt linearization technique.          │
+│    -> Provided the subgraph-to-prompt linearization technique.         │
 └────────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -640,7 +634,7 @@ The system is fully containerized using a multi-stage `Dockerfile` (Python 3.11-
 The WebGL molecular viewer ([`ui/`](file:///c:/Users/Sakshi/Desktop/ML-Prof.%20Vishwash/Project%203%20RAG/ChiralGraph-RAG/ui/)) incorporates advanced client-side graphics handling:
 * **Multi-Layer Scroll-Wheel Neutralization**: Prototype-level method override and capture-phase DOM interception ensure mouse wheel scrolling is decoupled from canvas zooming, preserving mouse drag exclusively for smooth 3D spatial rotation.
 * **Discrete 5% Step Zooming**: Zoom is strictly bounded between **50% and 150%** with 5% increment buttons (`+5%` / `−5%`) and instant baseline centering (`100%`).
-* **Fullscreen Cinematic Maximize**: A dedicated **`⛶ Maximize`** mode dynamically expands the WebGL viewport to fill the entire display (`100vw × 100vh`) with automatic aspect ratio recalculation via `viewer3d.resize()`.
+* **Fullscreen Cinematic Maximize**: A dedicated **`Maximize`** mode dynamically expands the WebGL viewport to fill the entire display (`100vw × 100vh`) with automatic aspect ratio recalculation via `viewer3d.resize()`.
 * **Zero-Stale Caching**: Serves assets through `NoCacheStaticFiles` with version query busting to prevent stale browser disk caching.
 
 ---
