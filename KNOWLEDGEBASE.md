@@ -1,4 +1,4 @@
-# ChiralGraph-RAG: Domain Knowledge Base & Theoretical Reference
+ # ChiralGraph-RAG: Domain Knowledge Base & Theoretical Reference
 
 This knowledge base serves as the foundational scientific and algorithmic reference for **ChiralGraph-RAG**. It synthesizes concepts from computational biophysics, stereochemistry, clinical pharmacology, and modern Graph-Augmented LLM architectures.
 

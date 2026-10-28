@@ -11,6 +11,13 @@ from src.api.main import app
 client = TestClient(app)
 
 
+def test_root_ui_endpoint():
+    response = client.get("/")
+    assert response.status_code == 200
+    assert "ChiralGraph-RAG" in response.text
+    assert "3Dmol" in response.text
+
+
 def test_health_endpoint():
     response = client.get("/health")
     assert response.status_code == 200

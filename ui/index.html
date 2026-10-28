@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChiralGraph-RAG | 3D Stereoisomer & Conformation-Aware Drug Discovery Engine</title>
+  <meta name="description" content="A hybrid Knowledge Graph and Vector RAG engine eliminating the 2D stereochemical blindspot in drug discovery through RDKit 3D conformers and Think-on-Graph reasoning.">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Outfit:wght@500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- 3Dmol.js WebGL Chemical Viewer -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/3Dmol/2.0.4/3Dmol-min.js"></script>
+  <script>
+    // Permanently neutralize 3Dmol mouse-wheel zoom at the prototype level
+    (function killScrollZoom() {
+      function patch() {
+        if (typeof $3Dmol !== 'undefined' && $3Dmol.GLViewer && $3Dmol.GLViewer.prototype) {
+          $3Dmol.GLViewer.prototype._handleMouseScroll = function(e) {
+            if (e) {
+              if (e.stopPropagation) e.stopPropagation();
+              if (e.preventDefault) e.preventDefault();
+            }
+            return false;
+          };
+        }
+      }
+      patch();
+      window.addEventListener('DOMContentLoaded', patch);
+    })();
+  </script>
+
+  <!-- Embedded Brick Red & Clean White Design System -->
+  <style>
+    :root {
+      /* Core Backgrounds */
+      --bg-primary: #F8F9FA;
+      --bg-secondary: #FFFFFF;
+      --bg-card: #FFFFFF;
+      --bg-card-hover: #FCFCFC;
+      --bg-input: #FFFFFF;
+      --bg-subtle: #F4F1EE;
+
+      /* Borders */
+      --border-subtle: #E5E7EB;
+      --border-light: #F3F4F6;
+      --border-brick: #E8B4AC;
+      --border-brick-focus: #B23A22;
+
+      /* Brick Red Brand Accents */
+      --accent-brick: #B23A22;
+      --accent-brick-dark: #8F2612;
+      --accent-brick-light: #FDF2F0;
+      --accent-brick-border: #F5C2BC;
+      --accent-brick-glow: rgba(178, 58, 34, 0.18);
+
+      /* Functional Status Accents */
+      --accent-green: #059669;
+      --accent-green-bg: #ECFDF5;
+      --accent-green-border: #A7F3D0;
+
+      --accent-amber: #D97706;
+      --accent-amber-bg: #FFFBEB;
+      --accent-amber-border: #FDE68A;
+
+      --accent-crimson: #DC2626;
+      --accent-crimson-bg: #FEF2F2;
+      --accent-crimson-border: #FECACA;
+
+      --accent-slate: #475569;
+      --accent-slate-bg: #F1F5F9;
+
+      /* Text Hierarchy */
+      --text-main: #18181B;
+      --text-muted: #4B5563;
+      --text-dim: #9CA3AF;
+      --text-brick: #B23A22;
+
+      /* Typography */
+      --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      --font-display: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+
+      /* Shadows */
+      --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+      --shadow-card: 0 2px 10px -1px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.03);
+      --shadow-card-hover: 0 6px 20px -2px rgba(0, 0, 0, 0.08), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
+      --shadow-brick: 0 4px 14px 0 rgba(178, 58, 34, 0.22);
+
+      --radius-sm: 6px;
+      --radius-md: 10px;
+      --radius-lg: 14px;
+      --transition-fast: 0.18s ease;
+      --transition-smooth: 0.28s ease;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg-primary);
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(178, 58, 34, 0.03) 0px, transparent 40%),
+        radial-gradient(at 100% 0%, rgba(178, 58, 34, 0.02) 0px, transparent 35%);
+      color: var(--text-main);
+      min-height: 100vh;
+      line-height: 1.5;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* App Container */
+    .app-container {
+      max-width: 1540px;
+      margin: 0 auto;
+      padding: 24px 32px 48px;
+    }
+
+    /* Header */
+    .app-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 22px;
+    }
+
+    .logo-group {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: var(--accent-brick);
+      color: #FFFFFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-brick);
+    }
+
+    .logo-icon svg {
+      width: 22px;
+      height: 22px;
+    }
+
+    .logo-text h1 {
+      font-family: var(--font-display);
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      color: var(--text-main);
+    }
+
+    .logo-text p {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    .system-status-pills {
+      display: flex;
+      gap: 10px;
+    }
+
+    .status-pill {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 14px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: 30px;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-muted);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .status-indicator {
+      width: 7px;
+      height: 7px;
+      border-radius: 50%;
+      background: var(--accent-green);
+    }
+
+    /* Presets Bar - Confined to 1 Single Line */
+    .presets-section {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 22px;
+      flex-wrap: nowrap;
+      overflow-x: auto;
+      white-space: nowrap;
+      padding-bottom: 4px;
+    }
+
+    .presets-label {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      flex-shrink: 0;
+    }
+
+    .preset-chip {
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-muted);
+      padding: 7px 14px;
+      border-radius: var(--radius-sm);
+      font-size: 12.5px;
+      font-weight: 500;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: var(--transition-fast);
+      box-shadow: var(--shadow-sm);
+      flex-shrink: 0;
+    }
+
+    .preset-chip:hover {
+      border-color: var(--border-brick);
+      color: var(--accent-brick);
+      background: #FFFFFF;
+    }
+
+    .preset-chip.active {
+      background: var(--accent-brick-light);
+      border-color: var(--accent-brick);
+      color: var(--accent-brick);
+      font-weight: 600;
+    }
+
+    /* Navigation Tabs */
+    .nav-tabs {
+      display: flex;
+      gap: 4px;
+      border-bottom: 1px solid var(--border-subtle);
+      margin-bottom: 24px;
+    }
+
+    .nav-tab {
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      padding: 12px 20px;
+      font-family: var(--font-display);
+      font-size: 14.5px;
+      font-weight: 600;
+      cursor: pointer;
+      position: relative;
+      transition: var(--transition-fast);
+      border-radius: var(--radius-sm) var(--radius-sm) 0 0;
+    }
+
+    .nav-tab:hover {
+      color: var(--accent-brick);
+      background: rgba(178, 58, 34, 0.03);
+    }
+
+    .nav-tab.active {
+      color: var(--accent-brick);
+      background: #FFFFFF;
+    }
+
+    .nav-tab.active::after {
+      content: '';
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: var(--accent-brick);
+    }
+
+    /* Tab Panes */
+    .tab-pane {
+      display: none;
+    }
+
+    .tab-pane.active {
+      display: block;
+    }
+
+    /* Grid Layouts - Equal height stretch */
+    .grid-2col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: stretch;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      box-shadow: var(--shadow-card);
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .card-title {
+      font-family: var(--font-display);
+      font-size: 17px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* Badges */
+    .badge {
+      font-size: 11.5px;
+      font-weight: 600;
+      padding: 3px 10px;
+      border-radius: 4px;
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .badge-brick { background: var(--accent-brick-light); color: var(--accent-brick); border: 1px solid var(--accent-brick-border); }
+    .badge-green { background: var(--accent-green-bg); color: var(--accent-green); border: 1px solid var(--accent-green-border); }
+    .badge-amber { background: var(--accent-amber-bg); color: var(--accent-amber); border: 1px solid var(--accent-amber-border); }
+    .badge-crimson { background: var(--accent-crimson-bg); color: var(--accent-crimson); border: 1px solid var(--accent-crimson-border); }
+    .badge-slate { background: var(--accent-slate-bg); color: var(--accent-slate); border: 1px solid var(--border-subtle); }
+
+    /* Form Elements */
+    .input-group {
+      margin-bottom: 16px;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 11.5px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 6px;
+    }
+
+    .text-input, .textarea-input {
+      width: 100%;
+      background: var(--bg-input);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      font-size: 13.5px;
+      transition: var(--transition-fast);
+    }
+
+    .text-input:focus, .textarea-input:focus {
+      outline: none;
+      border-color: var(--accent-brick);
+      box-shadow: 0 0 0 3px var(--accent-brick-glow);
+    }
+
+    .textarea-input {
+      resize: vertical;
+      min-height: 80px;
+      line-height: 1.5;
+    }
+
+    /* Action Buttons */
+    .btn-primary {
+      background: var(--accent-brick);
+      color: #FFFFFF;
+      border: 1px solid transparent;
+      padding: 10px 20px;
+      border-radius: var(--radius-sm);
+      font-family: var(--font-display);
+      font-size: 13.5px;
+      font-weight: 600;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: var(--transition-fast);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+    }
+
+    .btn-primary:hover {
+      background: var(--accent-brick-dark);
+      box-shadow: var(--shadow-brick);
+    }
+
+    .btn-primary:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .btn-secondary {
+      background: #FFFFFF;
+      color: var(--text-main);
+      border: 1px solid var(--border-subtle);
+      padding: 9px 16px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .btn-secondary:hover {
+      background: #F9FAFB;
+      border-color: #D1D5DB;
+      color: var(--accent-brick);
+    }
+
+    /* Callout Card (2D Stereochemical Blindspot) */
+    .callout-card {
+      margin-top: 18px;
+      padding: 14px;
+      background: var(--accent-brick-light);
+      border: 1px solid var(--accent-brick-border);
+      border-radius: var(--radius-sm);
+    }
+
+    .callout-title {
+      font-size: 12.5px;
+      font-weight: 700;
+      color: var(--accent-brick);
+      margin-bottom: 4px;
+    }
+
+    .callout-body {
+      font-size: 12px;
+      color: var(--text-muted);
+      line-height: 1.45;
+    }
+
+    /* Pipeline Status Card - Fills Empty Space on Left Side */
+    .pipeline-status-card {
+      margin-top: 18px;
+      padding: 16px;
+      background: #FAFAFA;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      flex-grow: 1;
+    }
+
+    .pipeline-header {
+      font-size: 11.5px;
+      font-weight: 700;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+      margin-bottom: 12px;
+    }
+
+    .pipeline-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .step-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      padding: 6px 10px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: 4px;
+    }
+
+    .step-label {
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .step-val {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent-brick);
+      font-family: var(--font-mono);
+    }
+
+    /* Dossier Output Container */
+    .dossier-output {
+      min-height: 160px;
+      background: #FFFFFF;
+      border-radius: var(--radius-sm);
+      line-height: 1.6;
+    }
+
+    /* 3D Mol Viewer Container & Top Toolbar */
+    .viewer-top-toolbar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .style-toggle-group {
+      display: inline-flex;
+      background: #F3F4F6;
+      border-radius: var(--radius-sm);
+      padding: 2px;
+      border: 1px solid var(--border-subtle);
+    }
+
+    .style-btn {
+      background: transparent;
+      border: none;
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: var(--transition-fast);
+    }
+
+    .style-btn:hover {
+      color: var(--text-main);
+    }
+
+    .style-btn.active {
+      background: #FFFFFF;
+      color: var(--accent-brick);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    .zoom-toolbar-group {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: #FFFFFF;
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      padding: 3px 8px;
+    }
+
+    .tool-btn {
+      background: #F3F4F6;
+      border: 1px solid var(--border-subtle);
+      color: var(--text-main);
+      width: 24px;
+      height: 24px;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: var(--transition-fast);
+      line-height: 1;
+    }
+
+    .tool-btn:hover {
+      background: var(--accent-brick);
+      color: #FFFFFF;
+      border-color: var(--accent-brick);
+    }
+
+    #zoom-slider {
+      width: 75px;
+      accent-color: var(--accent-brick);
+      cursor: pointer;
+    }
+
+    .viewer-3d-wrapper {
+      position: relative;
+      width: 100%;
+      height: 480px;
+      background: #FFFFFF;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      overflow: hidden;
+    }
+
+    /* Maximized Fullscreen Mode for 3D Conformer Studio */
+    #card-3d-viewer.maximized {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      max-width: 100vw !important;
+      max-height: 100vh !important;
+      z-index: 999999 !important;
+      border-radius: 0 !important;
+      margin: 0 !important;
+      padding: 18px 24px !important;
+      display: flex !important;
+      flex-direction: column !important;
+      background: #FFFFFF !important;
+      box-shadow: none !important;
+    }
+
+    #card-3d-viewer.maximized .viewer-3d-wrapper {
+      flex: 1 !important;
+      height: auto !important;
+      min-height: 0 !important;
+    }
+
+    #molviewer3d {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      touch-action: none;
+    }
+
+    .viewer-overlay {
+      position: absolute;
+      top: 14px;
+      left: 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      pointer-events: none;
+    }
+
+    .viewer-chip {
+      background: rgba(255, 255, 255, 0.94);
+      backdrop-filter: blur(8px);
+      border: 1px solid var(--border-subtle);
+      padding: 5px 12px;
+      border-radius: 4px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      color: var(--text-main);
+      display: inline-flex;
+      align-items: center;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+
+    /* Metrics Row */
+    .metrics-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .metric-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-md);
+      padding: 18px;
+      text-align: center;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .metric-value {
+      font-family: var(--font-display);
+      font-size: 28px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+    }
+
+    .metric-label {
+      font-size: 11.5px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    /* Data Table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      margin-top: 8px;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 10px 12px;
+      color: var(--text-muted);
+      font-weight: 600;
+      border-bottom: 1px solid var(--border-subtle);
+      background: #F9FAFB;
+      text-transform: uppercase;
+      font-size: 11px;
+      letter-spacing: 0.5px;
+    }
+
+    .data-table td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--border-subtle);
+      color: var(--text-main);
+    }
+
+    .data-table tr:hover td {
+      background: #F9FAFB;
+    }
+
+    /* Knowledge Graph Container */
+    .graph-viewport {
+      width: 100%;
+      height: 480px;
+      background: #FFFFFF;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .graph-legend {
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+      flex-wrap: wrap;
+    }
+
+    .legend-item {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    /* Loading Spinner */
+    .spinner {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-radius: 50%;
+      border-top-color: #FFFFFF;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="app-container">
+  
+  <!-- Header -->
+  <header class="app-header">
+    <div class="logo-group">
+      <div class="logo-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 3v6"></path>
+          <path d="M12 15v6"></path>
+          <path d="M4.22 7.78l5.2 3"></path>
+          <path d="M14.58 13.22l5.2 3"></path>
+          <path d="M4.22 16.22l5.2-3"></path>
+          <path d="M14.58 10.78l5.2-3"></path>
+        </svg>
+      </div>
+      <div class="logo-text">
+        <h1>ChiralGraph-RAG</h1>
+        <p>3D Conformation & Stereoisomer-Aware Drug Discovery Engine</p>
+      </div>
+    </div>
+    
+    <div class="system-status-pills">
+      <div class="status-pill" id="status-graph">
+        <span class="status-indicator"></span>
+        <span>Graph: NetworkX / Neo4j Ready</span>
+      </div>
+      <div class="status-pill" id="status-rdkit">
+        <span class="status-indicator"></span>
+        <span>RDKit: 3D ETKDG + MMFF94 Active</span>
+      </div>
+      <div class="status-pill" id="status-guardrail">
+        <span class="status-indicator"></span>
+        <span>ToG Guardrail: Enforced</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Presets Quick Selector - Confined to 1 Line -->
+  <section class="presets-section">
+    <span class="presets-label">Benchmark Presets:</span>
+    <button class="preset-chip active" id="preset-thalidomide" onclick="selectPreset('thalidomide')">
+      <strong>Thalidomide</strong> (CRBN Teratogen)
+    </button>
+    <button class="preset-chip" id="preset-citalopram" onclick="selectPreset('citalopram')">
+      <strong>Citalopram</strong> (hERG Arrhythmia)
+    </button>
+    <button class="preset-chip" id="preset-ketamine" onclick="selectPreset('ketamine')">
+      <strong>Ketamine</strong> (NMDA 4× Potency)
+    </button>
+    <button class="preset-chip" id="preset-ofloxacin" onclick="selectPreset('ofloxacin')">
+      <strong>Ofloxacin</strong> (Gyrase 128×)
+    </button>
+  </section>
+
+  <!-- Navigation Tabs -->
+  <nav class="nav-tabs" role="tablist">
+    <button class="nav-tab active" id="tab-btn-rag" onclick="switchTab('rag')">Think-on-Graph RAG Studio</button>
+    <button class="nav-tab" id="tab-btn-3d" onclick="switchTab('3d')">3D Molecular Conformer Studio</button>
+    <button class="nav-tab" id="tab-btn-kg" onclick="switchTab('kg')">Stereochemical Knowledge Graph</button>
+    <button class="nav-tab" id="tab-btn-bench" onclick="switchTab('bench')">Quantitative Benchmark</button>
+  </nav>
+
+  <!-- ===================================================================
+       TAB 1: Think-on-Graph RAG Studio
+       =================================================================== -->
+  <main class="tab-pane active" id="tab-pane-rag">
+    <div class="grid-2col">
+      
+      <!-- Left Column: Input Form, Callout, & Pipeline State -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Pharmacological Query & SMILES</h2>
+          <span class="badge badge-brick">ToG Hybrid Pipeline</span>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="query-input">Clinical / Pharmacological Question</label>
+          <textarea class="textarea-input" id="query-input" rows="3">Is (S)-thalidomide safe to prescribe as a sedative in early pregnancy?</textarea>
+        </div>
+
+        <div class="input-group">
+          <label class="input-label" for="smiles-input">Candidate SMILES (Optional 3D Conformer Input)</label>
+          <input class="text-input" id="smiles-input" type="text" value="O=C1CC[C@H](N2C(=O)c3ccccc3C2=O)C(=O)N1" style="font-family: var(--font-mono);">
+        </div>
+
+        <div style="display: flex; gap: 12px; align-items: center; margin-top: 14px;">
+          <button class="btn-primary" id="btn-run-rag" onclick="runRAGQuery()">
+            <span id="rag-btn-text">Synthesize SAR Dossier</span>
+            <span id="rag-btn-spinner" class="spinner" style="display: none;"></span>
+          </button>
+          <button class="btn-secondary" id="btn-toggle-isomer" onclick="loadOppositeIsomer()">
+            Switch to (R)-Enantiomer
+          </button>
+        </div>
+
+        <!-- 2D Blindspot Explanation Card -->
+        <div class="callout-card">
+          <div class="callout-title">The 2D Stereochemical Blindspot</div>
+          <div class="callout-body">
+            Enantiomers share identical 1D chemical names, molecular weights, and 2D connectivity graphs. Standard vector retrieval conflates therapeutic cures with stereospecific toxic liabilities by merging ungrounded text chunks.
+          </div>
+        </div>
+
+        <!-- Live Reasoning Pipeline State (Fills space evenly) -->
+        <div class="pipeline-status-card">
+          <div class="pipeline-header">Think-on-Graph Reasoning Pipeline State</div>
+          <div class="pipeline-steps">
+            <div class="step-item">
+              <span class="step-label">RDKit CIP Stereocenter Verification</span>
+              <span class="step-val" id="step-cip-val">CIP (S) Confirmed</span>
+            </div>
+            <div class="step-item">
+              <span class="step-label">Deterministic Graph Path Traversal</span>
+              <span class="step-val" id="step-graph-val">Target Pockets Mapped</span>
+            </div>
+            <div class="step-item">
+              <span class="step-label">Guarded Vector Citation Filtering</span>
+              <span class="step-val" id="step-guard-val">Verified Isolated</span>
+            </div>
+            <div class="step-item">
+              <span class="step-label">Quantitative Eudismic Ratio Calculation</span>
+              <span class="step-val" id="step-ratio-val">Computed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right Column: Synthesized SAR Dossier & Target Affinities -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Synthesized Pharmacological Dossier</h2>
+          <span class="badge badge-green" id="guardrail-badge">Guardrail: Enforced</span>
+        </div>
+
+        <div class="dossier-output" id="chiral-output">
+          <p style="color: var(--text-dim); padding-top: 10px;"><em>Click "Synthesize SAR Dossier" to run the hybrid engine...</em></p>
+        </div>
+
+        <!-- Dossier Target Bindings Table -->
+        <div style="margin-top: 24px;">
+          <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; font-weight: 700;">
+            Verified Multi-Hop Target Affinities & Pockets
+          </h4>
+          <table class="data-table" id="bindings-table">
+            <thead>
+              <tr>
+                <th>Isomer</th>
+                <th>Target</th>
+                <th>Affinity Constant</th>
+                <th>Steric Clash</th>
+              </tr>
+            </thead>
+            <tbody id="bindings-tbody">
+              <tr><td colspan="4" style="text-align: center; color: var(--text-dim);">No data loaded yet.</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+      </div>
+
+    </div>
+  </main>
+
+  <!-- ===================================================================
+       TAB 2: 3D Molecular Conformer Studio
+       =================================================================== -->
+  <section class="tab-pane" id="tab-pane-3d">
+    <div class="grid-2col">
+      
+      <!-- 3D Viewport Column with Top Toolbar -->
+      <div class="card" id="card-3d-viewer">
+        <div class="card-header">
+          <h2 class="card-title">Interactive 3D WebGL Conformer</h2>
+          
+          <!-- Top Controls Toolbar: Representations & Discrete Zoom -->
+          <div class="viewer-top-toolbar">
+            <div class="style-toggle-group">
+              <button class="style-btn active" id="btn-style-stick" onclick="setViewerStyle('stick')">Sticks</button>
+              <button class="style-btn" id="btn-style-sphere" onclick="setViewerStyle('sphere')">Spheres</button>
+              <button class="style-btn" id="btn-style-line" onclick="setViewerStyle('line')">Wireframe</button>
+            </div>
+            
+            <div class="zoom-toolbar-group">
+              <button type="button" class="tool-btn" id="btn-zoom-out" onclick="stepZoom(-5)" title="Zoom Out (-5%)">-</button>
+              <input type="range" id="zoom-slider" min="50" max="150" step="5" value="100" oninput="applyAbsoluteZoom(this.value)">
+              <button type="button" class="tool-btn" id="btn-zoom-in" onclick="stepZoom(5)" title="Zoom In (+5%)">+</button>
+              <span id="zoom-label" style="font-size: 11.5px; font-family: var(--font-mono); color: var(--text-main); font-weight: 700; min-width: 44px; text-align: center;">100%</span>
+            </div>
+
+            <button class="btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="toggleConformerChirality()">Invert Chirality</button>
+            <button class="btn-secondary" style="padding: 5px 10px; font-size: 12px;" onclick="reset3DCamera()">Center</button>
+            <button type="button" class="btn-secondary" id="btn-maximize-viewer" style="padding: 5px 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 4px;" onclick="toggleMaximizeViewer()" title="Maximize 3D View (Esc to exit)">⛶ Maximize</button>
+          </div>
+        </div>
+
+        <div class="viewer-3d-wrapper" onwheel="event.stopPropagation(); event.preventDefault(); return false;">
+          <div id="molviewer3d" onwheel="event.stopPropagation(); event.preventDefault(); return false;"></div>
+          
+          <div class="viewer-overlay">
+            <div class="viewer-chip" id="chip-isomer-name">Compound: (S)-Thalidomide</div>
+            <div class="viewer-chip" id="chip-cip">CIP Code: (S) Stereocenter</div>
+            <div class="viewer-chip" id="chip-energy">Energy: -43.16 kcal/mol</div>
+          </div>
+        </div>
+
+        <p style="margin-top: 12px; font-size: 12px; color: var(--text-muted);">
+          Drag to rotate in 3D • Use slider or +/- buttons to zoom (50%–150%) • Coordinates optimized via RDKit ETKDG v3 + MMFF94 force field.
+        </p>
+      </div>
+
+      <!-- Physics & Descriptors Column -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">3D Conformation & Biophysical Descriptors</h2>
+          <span class="badge badge-brick">MMFF94 Physics</span>
+        </div>
+
+        <div class="metrics-row" style="grid-template-columns: 1fr 1fr; margin-bottom: 20px;">
+          <div class="metric-card">
+            <div class="metric-value" id="val-formula" style="font-size: 20px; color: var(--accent-brick);">C13H10N2O4</div>
+            <div class="metric-label">Molecular Formula</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="val-mw" style="font-size: 20px; color: var(--text-main);">258.23</div>
+            <div class="metric-label">Molecular Weight (g/mol)</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="val-asphericity" style="font-size: 20px; color: var(--accent-slate);">0.5347</div>
+            <div class="metric-label">3D Asphericity</div>
+          </div>
+          <div class="metric-card">
+            <div class="metric-value" id="val-eccentricity" style="font-size: 20px; color: var(--accent-green);">0.9813</div>
+            <div class="metric-label">3D Eccentricity</div>
+          </div>
+        </div>
+
+        <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 10px; font-weight: 700;">
+          Conformer Strain Ensemble (ΔE ≤ 4.0 kcal/mol Bio-Active Threshold)
+        </h4>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>Conf ID</th>
+              <th>Absolute Energy</th>
+              <th>Relative Strain (ΔE)</th>
+              <th>Bioactive Candidate</th>
+            </tr>
+          </thead>
+          <tbody id="conformers-tbody">
+            <tr>
+              <td>#0</td>
+              <td>-43.159 kcal/mol</td>
+              <td style="color: var(--accent-green);">0.000 kcal/mol</td>
+              <td><span class="badge badge-green">Candidate</span></td>
+            </tr>
+            <tr>
+              <td>#1</td>
+              <td>-43.159 kcal/mol</td>
+              <td style="color: var(--accent-green);">0.000 kcal/mol</td>
+              <td><span class="badge badge-green">Candidate</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       TAB 3: Stereochemical Knowledge Graph Explorer
+       =================================================================== -->
+  <section class="tab-pane" id="tab-pane-kg">
+    <div class="grid-2col">
+      
+      <!-- Subgraph Interactive Map -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Stereochemical Subgraph Map</h2>
+          <span class="badge badge-brick" id="kg-drug-badge">Thalidomide Neighborhood</span>
+        </div>
+
+        <div class="graph-viewport" id="graph-svg-container">
+          <!-- Dynamically populated SVG interactive network -->
+        </div>
+
+        <div class="graph-legend">
+          <span class="legend-item"><span class="legend-dot" style="background: #B23A22;"></span> Parent Drug</span>
+          <span class="legend-item"><span class="legend-dot" style="background: #059669;"></span> Eutomer (Active)</span>
+          <span class="legend-item"><span class="legend-dot" style="background: #DC2626;"></span> Distomer (Toxic/Inert)</span>
+          <span class="legend-item"><span class="legend-dot" style="background: #475569;"></span> Target Receptor</span>
+          <span class="legend-item"><span class="legend-dot" style="background: #D97706;"></span> Clinical Hazard</span>
+        </div>
+      </div>
+
+      <!-- Graph Details Pane -->
+      <div class="card">
+        <div class="card-header">
+          <h2 class="card-title">Multi-Hop Path Disparity</h2>
+          <span class="badge badge-amber" id="kg-disparity-badge">Eudismic Ratio: 10.0:1</span>
+        </div>
+
+        <div id="kg-details-content" style="line-height: 1.6; font-size: 13.5px; color: var(--text-muted);">
+          <!-- Populated by app.js -->
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+  <!-- ===================================================================
+       TAB 4: Quantitative Benchmark Suite
+       =================================================================== -->
+  <section class="tab-pane" id="tab-pane-bench">
+    <div class="card">
+      <div class="card-header">
+        <div>
+          <h2 class="card-title">Quantitative Ablation: Naive Vector RAG vs. ChiralGraph-RAG</h2>
+          <p style="font-size: 13px; color: var(--text-muted); margin-top: 4px;">
+            Benchmarked across clinical chiral drug pairs (Thalidomide, Citalopram, Ketamine, Ofloxacin)
+          </p>
+        </div>
+        <button class="btn-primary" id="btn-run-benchmark" onclick="executeBenchmark()">
+          <span>Run Live Evaluation</span>
+        </button>
+      </div>
+
+      <!-- Scorecards Grid -->
+      <div class="metrics-row" style="margin-top: 10px;">
+        <div class="metric-card" style="border-top: 3px solid var(--accent-brick);">
+          <div class="metric-value" style="color: var(--accent-brick);" id="bm-disc">+100.0%</div>
+          <div class="metric-label">Discrimination Accuracy Gain</div>
+        </div>
+        <div class="metric-card" style="border-top: 3px solid var(--accent-green);">
+          <div class="metric-value" style="color: var(--accent-green);" id="bm-halluc">-100.0%</div>
+          <div class="metric-label">Hallucination Reduction</div>
+        </div>
+        <div class="metric-card" style="border-top: 3px solid var(--accent-slate);">
+          <div class="metric-value" style="color: var(--accent-slate);" id="bm-prec">100.0%</div>
+          <div class="metric-label">Binding Affinity Precision</div>
+        </div>
+        <div class="metric-card" style="border-top: 3px solid var(--accent-brick-dark);">
+          <div class="metric-value" style="color: var(--accent-brick-dark);" id="bm-guard">100.0%</div>
+          <div class="metric-label">Guardrail Pass Rate</div>
+        </div>
+      </div>
+
+      <!-- Benchmark Breakdown Table -->
+      <h4 style="font-size: 12px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.6px; margin: 24px 0 12px; font-weight: 700;">
+        Detailed Benchmark Query Results
+      </h4>
+      <table class="data-table" id="benchmark-table">
+        <thead>
+          <tr>
+            <th>Query ID</th>
+            <th>Compound</th>
+            <th>Naive RAG Hallucinated?</th>
+            <th>ChiralGraph Discriminated?</th>
+            <th>Affinity Matched?</th>
+            <th>Guardrail Status</th>
+          </tr>
+        </thead>
+        <tbody id="benchmark-tbody">
+          <!-- Populated by app.js -->
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+</div>
+
+<!-- Application Logic -->
+<script src="/static/app.js?v=20261028-v12-noscroll"></script>
+
+</body>
+</html>

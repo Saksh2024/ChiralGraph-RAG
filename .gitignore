@@ -23,3 +23,8 @@ htmlcov/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Media & Large Recordings
+*.mp4
+*.avi
+*.mov

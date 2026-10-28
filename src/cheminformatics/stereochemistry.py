@@ -49,6 +49,7 @@ class MolecularProfile(BaseModel):
     chiral_centers: List[StereocenterInfo]
     conformer_count: int
     lowest_energy_kcal_mol: Optional[float] = None
+    lowest_energy_molblock: Optional[str] = None
     conformers: List[ConformerSummary] = []
     asphericity: Optional[float] = None
     eccentricity: Optional[float] = None
@@ -162,6 +163,7 @@ class StereochemistryEngine:
 
         conformers: List[ConformerSummary] = []
         min_energy = None
+        molblock = None
         asphericity = None
         eccentricity = None
         inertial_shape = None
@@ -171,13 +173,12 @@ class StereochemistryEngine:
                 mol_3d, conformers = self.generate_3d_conformers(canonical_smiles, num_conformers=num_conformers)
                 if conformers:
                     min_energy = conformers[0].energy_kcal_mol
-                    # Calculate 3D shape descriptors for lowest energy conformer
                     conf_id = conformers[0].conformer_id
+                    molblock = Chem.MolToMolBlock(mol_3d, confId=conf_id)
                     asphericity = round(rdMolDescriptors.CalcAsphericity(mol_3d, confId=conf_id), 4)
                     eccentricity = round(rdMolDescriptors.CalcEccentricity(mol_3d, confId=conf_id), 4)
                     inertial_shape = round(rdMolDescriptors.CalcInertialShapeFactor(mol_3d, confId=conf_id), 4)
             except Exception as e:
-                # Graceful fallback if 3D embedding fails on highly constrained/exotic structures
                 pass
 
         return MolecularProfile(
@@ -193,6 +194,7 @@ class StereochemistryEngine:
             chiral_centers=chiral_centers,
             conformer_count=len(conformers),
             lowest_energy_kcal_mol=min_energy,
+            lowest_energy_molblock=molblock,
             conformers=conformers,
             asphericity=asphericity,
             eccentricity=eccentricity,

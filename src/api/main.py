@@ -35,6 +35,22 @@ async def lifespan(app: FastAPI):
     yield
 
 
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
+
+
+class NoCacheStaticFiles(StaticFiles):
+    async def get_response(self, path: str, scope):
+        response = await super().get_response(path, scope)
+        response.headers["Cache-Control"] = "no-cache, no-store, must-revalidate"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Expires"] = "0"
+        return response
+
+
+_UI_DIR = Path(__file__).resolve().parent.parent.parent / "ui"
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     description="3D Conformation & Stereoisomer-Aware Knowledge Graph RAG Engine for Drug Discovery",
@@ -50,6 +66,21 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Mount UI static assets and serve demo dashboard with strict no-cache headers
+if _UI_DIR.exists():
+    app.mount("/static", NoCacheStaticFiles(directory=str(_UI_DIR)), name="static")
+
+    @app.get("/", include_in_schema=False)
+    async def serve_ui():
+        return FileResponse(
+            str(_UI_DIR / "index.html"),
+            headers={
+                "Cache-Control": "no-cache, no-store, must-revalidate",
+                "Pragma": "no-cache",
+                "Expires": "0",
+            },
+        )
 
 # Singletons
 chem_engine = StereochemistryEngine(max_strain_threshold_kcal=settings.MAX_CONFORMER_STRAIN_KCAL)

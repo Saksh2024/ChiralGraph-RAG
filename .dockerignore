@@ -1,0 +1,30 @@
+# Git & Version Control
+.git/
+.gitignore
+
+# Python Environments & Cache
+.venv/
+env/
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Testing & Coverage
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Local Environment & Secrets
+.env
+
+# Media & Large Demonstration Files
+*.mp4
+*.avi
+*.mov
+
+# IDE Configuration
+.vscode/
+.idea/
+*.swp

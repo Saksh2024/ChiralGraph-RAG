@@ -82,6 +82,8 @@ Evaluated across high-impact stereoselective pharmacology benchmark queries (Tha
 
 ## 🚀 Quick Start
 
+> 📘 **Looking for complete step-by-step running instructions, UI walkthrough, and curl examples? See the [Comprehensive Run Guide](RUN_GUIDE.md).**
+
 ### 1. Prerequisites & Installation
 ```bash
 # Clone and enter the repository
