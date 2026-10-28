@@ -1,16 +1,16 @@
-# 🧬 ChiralGraph-RAG: 3D Conformation & Stereoisomer-Aware Drug Discovery Engine
+# ChiralGraph-RAG: 3D Conformation & Stereoisomer-Aware Drug Discovery Engine
 
 > A hybrid Knowledge Graph and Vector Retrieval-Augmented Generation (GraphRAG) system eliminating the **2D stereochemical blindspot** in AI drug discovery by fusing **RDKit 3D conformer physics**, **deterministic Neo4j/NetworkX graph traversal**, and **Think-on-Graph (ICLR 2024) guarded reasoning**.
 
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![RDKit](https://img.shields.io/badge/RDKit-2023.9+-green.svg)](https://www.rdkit.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-teal.svg)](https://fastapi.tiangolo.com/)
-[![Tests](https://img.shields.io/badge/Tests-13%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-14%20Passed-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)]()
 
 ---
 
-## 📌 Executive Summary
+## Executive Summary
 
 ### The Problem: The 2D Stereochemical Blindspot
 Conventional Large Language Models (LLMs) and dense vector embeddings operate on 1D/2D textual representations (IUPAC names, flat SMILES strings). In stereochemistry, this creates a catastrophic vulnerability:
@@ -30,7 +30,7 @@ ChiralGraph-RAG introduces a 4-tier hybrid architecture:
 
 ---
 
-## 🏗️ System Architecture
+## System Architecture
 
 ```mermaid
 flowchart TD
@@ -67,7 +67,7 @@ flowchart TD
 
 ---
 
-## 📊 Quantitative Benchmark Results
+## Quantitative Benchmark Results
 
 Evaluated across high-impact stereoselective pharmacology benchmark queries (Thalidomide, Citalopram, Ketamine, Ofloxacin):
 
@@ -80,9 +80,9 @@ Evaluated across high-impact stereoselective pharmacology benchmark queries (Tha
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
-> 📘 **Looking for complete step-by-step running instructions, UI walkthrough, and curl examples? See the [Comprehensive Run Guide](RUN_GUIDE.md).**
+> **Looking for complete step-by-step running instructions, UI walkthrough, and curl examples? See the [Comprehensive Run Guide](RUN_GUIDE.md).**
 
 ### 1. Prerequisites & Installation
 ```bash
@@ -91,7 +91,7 @@ cd Project\ 3\ RAG/ChiralGraph-RAG
 
 # Create virtual environment (optional)
 python -m venv .venv
-.venv\Scripts\activate   # Windows
+.venv\Scripts\activate   # Windows (or source .venv/bin/activate on Linux/macOS)
 
 # Install dependencies
 pip install -r requirements.txt
@@ -106,19 +106,20 @@ The system supports two execution backends:
 ```bash
 python -m pytest -v
 ```
-All 13 integration and unit tests pass with zero warnings:
-```
-tests/test_api.py::test_health_endpoint PASSED                           [  7%]
-tests/test_api.py::test_cheminformatics_analyze PASSED                   [ 15%]
-tests/test_api.py::test_graph_drug_endpoint PASSED                       [ 23%]
-tests/test_api.py::test_rag_query_endpoint PASSED                        [ 30%]
-tests/test_api.py::test_evaluation_benchmark_endpoint PASSED             [ 38%]
-tests/test_cheminformatics.py::test_cip_stereocenter_detection PASSED    [ 46%]
-tests/test_cheminformatics.py::test_stereoisomer_enumeration PASSED      [ 53%]
-tests/test_cheminformatics.py::test_3d_conformer_generation PASSED       [ 61%]
-tests/test_graph.py::test_seed_graph_stats PASSED                        [ 69%]
-tests/test_graph.py::test_thalidomide_disparity PASSED                   [ 76%]
-tests/test_graph.py::test_citalopram_disparity PASSED                    [ 84%]
+All 14 integration and unit tests pass with zero warnings:
+```text
+tests/test_api.py::test_root_ui_endpoint PASSED                          [  7%]
+tests/test_api.py::test_health_endpoint PASSED                           [ 14%]
+tests/test_api.py::test_cheminformatics_analyze PASSED                   [ 21%]
+tests/test_api.py::test_graph_drug_endpoint PASSED                       [ 28%]
+tests/test_api.py::test_rag_query_endpoint PASSED                        [ 35%]
+tests/test_api.py::test_evaluation_benchmark_endpoint PASSED             [ 42%]
+tests/test_cheminformatics.py::test_cip_stereocenter_detection PASSED    [ 50%]
+tests/test_cheminformatics.py::test_stereoisomer_enumeration PASSED      [ 57%]
+tests/test_cheminformatics.py::test_3d_conformer_generation PASSED       [ 64%]
+tests/test_graph.py::test_seed_graph_stats PASSED                        [ 71%]
+tests/test_graph.py::test_thalidomide_disparity PASSED                   [ 78%]
+tests/test_graph.py::test_citalopram_disparity PASSED                    [ 85%]
 tests/test_retriever.py::test_retriever_thalidomide_dossier PASSED       [ 92%]
 tests/test_retriever.py::test_reasoner_sar_report_generation PASSED      [100%]
 ```
@@ -127,11 +128,17 @@ tests/test_retriever.py::test_reasoner_sar_report_generation PASSED      [100%]
 ```bash
 uvicorn src.api.main:app --reload --port 8000
 ```
-Open **[http://localhost:8000/docs](http://localhost:8000/docs)** to explore the interactive OpenAPI documentation.
+Open **[http://localhost:8000](http://localhost:8000)** to view the interactive web dashboard, or **[http://localhost:8000/docs](http://localhost:8000/docs)** to explore the OpenAPI documentation.
+
+### 5. Running with Docker
+```bash
+# Build and run standalone container
+docker compose up --build
+```
 
 ---
 
-## 📡 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 | :--- | :--- | :--- |
@@ -144,22 +151,8 @@ Open **[http://localhost:8000/docs](http://localhost:8000/docs)** to explore the
 
 ---
 
-## 📄 CV / Resume Bullet Points
-
-```markdown
-ChiralGraph-RAG | Python, RDKit, Neo4j, Qdrant, FastAPI, Pytest, Groq (Llama 3.3)
-Nov 2026 – Present
-3D conformation and stereoisomer-aware GraphRAG engine evaluating chiral drug-target binding affinity and off-target liabilities
-• Architected a 3D conformation-aware GraphRAG engine using RDKit (ETKDG v3, MMFF94) and Neo4j to resolve chiral blindspots where 2D vector RAG produced 100% false safety hallucinations on mirror-image enantiomers.
-• Implemented CIP (R/S) stereocenter detection and conformer strain analysis, computing eudismic ratios and multi-hop pocket binding affinities across validated drug benchmarks (Thalidomide, Citalopram, Ketamine, Ofloxacin).
-• Engineered a Think-on-Graph (ICLR 2024) hybrid retriever fusing deterministic graph traversal with stereochemically-guarded vector search, isolating enantiomer-specific citations and eliminating off-target cross-contamination.
-• Deployed asynchronous FastAPI microservice with in-memory zero-dependency fallback (NetworkX) and production cloud connectors (Neo4j Aura, Qdrant), validated across 13 automated test suites.
-```
-
----
-
-## 📚 References & Theoretical Foundations
+## References & Theoretical Foundations
 * **Think-on-Graph (ToG)**: Sun et al., *Think-on-Graph: Deep and Responsible Reasoning of Large Language Model on Knowledge Graph*, ICLR 2024 (arXiv:2307.07697).
 * **MindMap**: Wen et al., *MindMap: Knowledge Graph Prompting Sparks Graph of Thoughts in Large Language Models*, arXiv:2308.09729.
 * **Unifying LLMs and KGs**: Pan et al., *Unifying Large Language Models and Knowledge Graphs: A Roadmap*, IEEE TKDE, arXiv:2306.08302.
-* Detailed scientific notes available in [`KNOWLEDGEBASE.md`](KNOWLEDGEBASE.md).
+* Detailed scientific notes available in [`KNOWLEDGEBASE.md`](KNOWLEDGEBASE.md) and [`PROJECT_REPORT.md`](PROJECT_REPORT.md).
