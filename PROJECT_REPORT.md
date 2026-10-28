@@ -327,7 +327,7 @@ To achieve maximum scientific fidelity, performance, and maintainability, each a
 
 #### Why Choice 3: Dual-Backend Strategy (NetworkX + Neo4j)
 - **The Rationale**: Academic evaluation and CI/CD testing require instant execution without spinning up external cloud databases. Conversely, enterprise deployments require scalable ACID graph storage.
-- **The Advantage**: In-Memory mode (`networkx.MultiDiGraph`) delivers zero-dependency, lightning-fast execution passing 14 tests in 4.5 seconds. Setting `GRAPH_BACKEND=neo4j` seamlessly routes queries to an enterprise Neo4j Aura cluster via Cypher queries.
+- **The Advantage**: In-Memory mode (`networkx.MultiDiGraph`) delivers zero-dependency, lightning-fast execution passing 17 tests in ~2 seconds. Setting `GRAPH_BACKEND=neo4j` seamlessly routes queries to an enterprise Neo4j Aura cluster via Cypher queries.
 
 #### Why Choice 4: Guarded Vector Literature Store (In-Memory + Qdrant)
 - **The Rationale**: Standard vector stores perform unconstrained top-$k$ nearest-neighbor searches. In stereochemistry, this causes 100% false safety contamination.
@@ -414,7 +414,7 @@ ChiralGraph-RAG/
 │   ├── api/                   # Production FastAPI Web Application
 │   │   └── main.py
 │   └── config.py              # Pydantic Settings & Environment Config
-├── tests/                     # 14 Comprehensive Pytest Suites
+├── tests/                     # 17 Comprehensive Pytest Suites
 ├── ui/                        # Web Dashboard with 3Dmol.js (WebGL Studio)
 ├── Dockerfile                 # Multi-Stage Production Container Specification
 ├── docker-compose.yml         # Container Orchestration (Standalone & Full-Stack Profiles)
@@ -569,7 +569,7 @@ GROQ_MODEL=llama-3.3-70b-versatile
 
 ### 6.4 Verification via Automated Test Suite
 
-Before deploying or demonstrating the project, run the automated test suite to confirm that all 14 integration and unit tests pass:
+Before deploying or demonstrating the project, run the automated test suite to confirm that all 17 integration and unit tests pass:
 
 ```bash
 pytest -v
@@ -581,24 +581,27 @@ pytest -v
 platform win32 -- Python 3.11.1, pytest-9.1.1
 rootdir: .../ChiralGraph-RAG
 configfile: pytest.ini
-collected 14 items
+collected 17 items
 
-tests/test_api.py::test_root_ui_endpoint PASSED                          [  7%]
-tests/test_api.py::test_health_endpoint PASSED                           [ 14%]
-tests/test_api.py::test_cheminformatics_analyze PASSED                   [ 21%]
-tests/test_api.py::test_graph_drug_endpoint PASSED                       [ 28%]
-tests/test_api.py::test_rag_query_endpoint PASSED                        [ 35%]
-tests/test_api.py::test_evaluation_benchmark_endpoint PASSED             [ 42%]
-tests/test_cheminformatics.py::test_cip_stereocenter_detection PASSED    [ 50%]
-tests/test_cheminformatics.py::test_stereoisomer_enumeration PASSED      [ 57%]
-tests/test_cheminformatics.py::test_3d_conformer_generation PASSED       [ 64%]
-tests/test_graph.py::test_seed_graph_stats PASSED                        [ 71%]
-tests/test_graph.py::test_thalidomide_disparity PASSED                   [ 78%]
-tests/test_graph.py::test_citalopram_disparity PASSED                    [ 85%]
-tests/test_retriever.py::test_retriever_thalidomide_dossier PASSED       [ 92%]
+tests/test_api.py::test_root_ui_endpoint PASSED                          [  5%]
+tests/test_api.py::test_health_endpoint PASSED                           [ 11%]
+tests/test_api.py::test_cheminformatics_analyze PASSED                   [ 17%]
+tests/test_api.py::test_graph_drug_endpoint PASSED                       [ 23%]
+tests/test_api.py::test_rag_query_endpoint PASSED                        [ 29%]
+tests/test_api.py::test_evaluation_benchmark_endpoint PASSED             [ 35%]
+tests/test_cheminformatics.py::test_cip_stereocenter_detection PASSED    [ 41%]
+tests/test_cheminformatics.py::test_stereoisomer_enumeration PASSED      [ 47%]
+tests/test_cheminformatics.py::test_3d_conformer_generation PASSED       [ 52%]
+tests/test_cheminformatics.py::test_ketamine_and_ofloxacin_chirality PASSED [ 58%]
+tests/test_graph.py::test_seed_graph_stats PASSED                        [ 64%]
+tests/test_graph.py::test_thalidomide_disparity PASSED                   [ 70%]
+tests/test_graph.py::test_citalopram_disparity PASSED                    [ 76%]
+tests/test_graph.py::test_ketamine_disparity PASSED                      [ 82%]
+tests/test_graph.py::test_ofloxacin_disparity PASSED                     [ 88%]
+tests/test_retriever.py::test_retriever_thalidomide_dossier PASSED       [ 94%]
 tests/test_retriever.py::test_reasoner_sar_report_generation PASSED      [100%]
 
-======================== 14 passed in 4.59s ==================================
+======================== 17 passed in 2.03s ==================================
 ```
 
 ---

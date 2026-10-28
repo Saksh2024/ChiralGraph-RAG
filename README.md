@@ -5,7 +5,7 @@
 [![Python 3.11+](https://img.shields.io/badge/python-3.11+-blue.svg)](https://www.python.org/downloads/)
 [![RDKit](https://img.shields.io/badge/RDKit-2023.9+-green.svg)](https://www.rdkit.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.109+-teal.svg)](https://fastapi.tiangolo.com/)
-[![Tests](https://img.shields.io/badge/Tests-14%20Passed-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/Tests-17%20Passed-brightgreen.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-purple.svg)]()
 
 ---
@@ -106,21 +106,24 @@ The system supports two execution backends:
 ```bash
 python -m pytest -v
 ```
-All 14 integration and unit tests pass with zero warnings:
+All 17 integration and unit tests pass with zero warnings:
 ```text
-tests/test_api.py::test_root_ui_endpoint PASSED                          [  7%]
-tests/test_api.py::test_health_endpoint PASSED                           [ 14%]
-tests/test_api.py::test_cheminformatics_analyze PASSED                   [ 21%]
-tests/test_api.py::test_graph_drug_endpoint PASSED                       [ 28%]
-tests/test_api.py::test_rag_query_endpoint PASSED                        [ 35%]
-tests/test_api.py::test_evaluation_benchmark_endpoint PASSED             [ 42%]
-tests/test_cheminformatics.py::test_cip_stereocenter_detection PASSED    [ 50%]
-tests/test_cheminformatics.py::test_stereoisomer_enumeration PASSED      [ 57%]
-tests/test_cheminformatics.py::test_3d_conformer_generation PASSED       [ 64%]
-tests/test_graph.py::test_seed_graph_stats PASSED                        [ 71%]
-tests/test_graph.py::test_thalidomide_disparity PASSED                   [ 78%]
-tests/test_graph.py::test_citalopram_disparity PASSED                    [ 85%]
-tests/test_retriever.py::test_retriever_thalidomide_dossier PASSED       [ 92%]
+tests/test_api.py::test_root_ui_endpoint PASSED                          [  5%]
+tests/test_api.py::test_health_endpoint PASSED                           [ 11%]
+tests/test_api.py::test_cheminformatics_analyze PASSED                   [ 17%]
+tests/test_api.py::test_graph_drug_endpoint PASSED                       [ 23%]
+tests/test_api.py::test_rag_query_endpoint PASSED                        [ 29%]
+tests/test_api.py::test_evaluation_benchmark_endpoint PASSED             [ 35%]
+tests/test_cheminformatics.py::test_cip_stereocenter_detection PASSED    [ 41%]
+tests/test_cheminformatics.py::test_stereoisomer_enumeration PASSED      [ 47%]
+tests/test_cheminformatics.py::test_3d_conformer_generation PASSED       [ 52%]
+tests/test_cheminformatics.py::test_ketamine_and_ofloxacin_chirality PASSED [ 58%]
+tests/test_graph.py::test_seed_graph_stats PASSED                        [ 64%]
+tests/test_graph.py::test_thalidomide_disparity PASSED                   [ 70%]
+tests/test_graph.py::test_citalopram_disparity PASSED                    [ 76%]
+tests/test_graph.py::test_ketamine_disparity PASSED                      [ 82%]
+tests/test_graph.py::test_ofloxacin_disparity PASSED                     [ 88%]
+tests/test_retriever.py::test_retriever_thalidomide_dossier PASSED       [ 94%]
 tests/test_retriever.py::test_reasoner_sar_report_generation PASSED      [100%]
 ```
 

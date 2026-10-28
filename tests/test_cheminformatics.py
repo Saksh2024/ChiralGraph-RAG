@@ -45,3 +45,18 @@ def test_3d_conformer_generation(chem_engine):
     assert profile.lowest_energy_kcal_mol is not None
     assert profile.asphericity is not None
     assert 0.0 <= profile.asphericity <= 1.0
+
+
+def test_ketamine_and_ofloxacin_chirality(chem_engine):
+    # (S)-Ketamine
+    mol_ket_s = chem_engine.parse_smiles("CN[C@]1(c2ccccc2Cl)CCCC1=O")
+    centers_ket = chem_engine.get_chiral_centers(mol_ket_s)
+    assert len(centers_ket) == 1
+    assert centers_ket[0].cip_code == "S"
+
+    # Levofloxacin ((S)-Ofloxacin)
+    mol_oflox_s = chem_engine.parse_smiles("C[C@H]1COc2c(N3CCN(C)CC3)c(F)cc3c(=O)c(C(=O)O)cn1c23")
+    centers_oflox = chem_engine.get_chiral_centers(mol_oflox_s)
+    assert len(centers_oflox) == 1
+    assert centers_oflox[0].cip_code == "S"
+
