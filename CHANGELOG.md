@@ -27,7 +27,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Multi-layer neutralization of scroll-wheel zooming (prototype override + DOM capture interception) ensuring mouse drag is dedicated exclusively to smooth 3D rotation.
 - **Comprehensive Run Guide (`RUN_GUIDE.md`)**:
   - Detailed step-by-step documentation for environment setup, configuration modes, containerized execution, interactive UI features, and REST API examples.
-- **MTP Academic Project Report (`MTP_REPORT.md`)**:
+- **Comprehensive Project Report (`PROJECT_REPORT.md`)**:
   - 10-chapter academic dissertation report covering the 2D stereochemical blindspot, biophysical algorithms, Think-on-Graph guarded reasoning, and quantitative benchmarking results.
 - **Anti-Caching Asset Pipeline**:
   - Added `NoCacheStaticFiles` in FastAPI backend and cache-busting script versioning (`?v=...`) to ensure browser updates reflect instantly.

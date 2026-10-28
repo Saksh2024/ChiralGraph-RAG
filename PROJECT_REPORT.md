@@ -1,4 +1,4 @@
-# 🎓 MAJOR TECHNICAL PROJECT (MTP) REPORT
+# 🎓 PROJECT REPORT: ChiralGraph-RAG
 
 ---
 
@@ -427,6 +427,7 @@ ChiralGraph-RAG/
 ├── Dockerfile                 # Multi-Stage Production Container Specification
 ├── docker-compose.yml         # Container Orchestration (Standalone & Full-Stack Profiles)
 ├── .dockerignore              # Container Build Optimization Filters
+├── PROJECT_REPORT.md          # Comprehensive Academic Project Report
 ├── RUN_GUIDE.md               # Complete System Run Guide & API Handbook
 ├── requirements.txt           # Verified Dependencies
 └── pytest.ini                 # Pytest Configuration
