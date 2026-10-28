@@ -174,6 +174,25 @@ uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
 
 ---
 
+## 5.1 Docker Containerized Execution (One-Command Deployment)
+
+The project includes a production multi-stage [`Dockerfile`](Dockerfile) and [`docker-compose.yml`](docker-compose.yml) with all RDKit native graphics libraries pre-configured:
+
+### Standalone Offline Mode (Default)
+Builds the container and starts the FastAPI server with zero external dependencies:
+```bash
+docker compose up --build
+```
+Access the application at **[http://localhost:8000](http://localhost:8000)**.
+
+### Full-Stack Mode with Live Neo4j & Qdrant
+Spins up ChiralGraph-RAG alongside dedicated Neo4j 5.15 and Qdrant containers:
+```bash
+docker compose --profile full up --build
+```
+
+---
+
 ## 6. Interactive Web UI Walkthrough
 
 Open **[http://localhost:8000](http://localhost:8000)** in your browser. The dashboard contains four specialized workspaces:
@@ -191,12 +210,17 @@ Open **[http://localhost:8000](http://localhost:8000)** in your browser. The das
 ### 2️⃣ 3D Molecular Conformer Studio
 * **Interactive 3D WebGL Viewer:** Renders ETKDG v3 3D conformer structures in real-time using 3Dmol.js.
 * **Force Field Strain Energies:** View the conformer ensemble ranked by MMFF94 force field strain energy ($\Delta E_{\text{strain}}$ in kcal/mol). Low-strain conformers ($\le 4.0\text{ kcal/mol}$) are highlighted as bioactive candidates.
-* **Styling Controls:** Toggle between **Stick**, **Sphere (Space-filling)**, **Line**, and **Cartoon** modes.
-* **Interactive Controls:**
-  * **Rotate:** Click and drag with the left mouse button.
-  * **Zoom:** Use the mouse scroll wheel or the zoom slider in the toolbar.
-  * **Pan:** Right-click and drag.
-  * **Center:** Click the `⊙` crosshair button to reset the view.
+* **Styling Controls:** Toggle between **Stick**, **Sphere (Space-filling)**, and **Wireframe** modes.
+* **Fullscreen / Maximize View:**
+  * Click **`⛶ Maximize`** to expand the 3D conformer viewport into a distraction-free full-screen view (`100vw × 100vh`).
+  * Click **`🗗 Minimize`** or press the **`Escape`** key to return to normal layout.
+* **Deterministic Discrete Zoom:**
+  * **Slider**: Drag smoothly between **`50%`** and **`150%`** (100% baseline).
+  * **`+` / `−` Step Buttons**: Increments/decrements zoom in precise **5%** steps (`100% → 105% → 110%`).
+  * **Center Button**: Resets camera and framing back to baseline `100%`.
+* **Smooth 3D Drag Rotation:**
+  * Mouse wheel zooming is neutralized so scrolling never causes erratic scale jumps.
+  * Left-click and drag anywhere on the canvas to rotate the molecule in 3D.
 
 ### 3️⃣ Stereochemical Knowledge Graph
 * **Interactive Graph Visualization:** Visualizes the explicit ontological separation between:

@@ -423,7 +423,11 @@ ChiralGraph-RAG/
 │   │   └── main.py
 │   └── config.py              # Pydantic Settings & Environment Config
 ├── tests/                     # 14 Comprehensive Pytest Suites
-├── ui/                        # Web Dashboard with 3Dmol.js
+├── ui/                        # Web Dashboard with 3Dmol.js (WebGL Studio)
+├── Dockerfile                 # Multi-Stage Production Container Specification
+├── docker-compose.yml         # Container Orchestration (Standalone & Full-Stack Profiles)
+├── .dockerignore              # Container Build Optimization Filters
+├── RUN_GUIDE.md               # Complete System Run Guide & API Handbook
 ├── requirements.txt           # Verified Dependencies
 └── pytest.ini                 # Pytest Configuration
 ```
@@ -608,6 +612,7 @@ tests/test_retriever.py::test_reasoner_sar_report_generation PASSED      [100%]
 
 ### 6.5 Running the Microservice & Web Interface
 
+#### 6.5.1 Local Uvicorn Execution
 Start the Uvicorn ASGI production server:
 ```bash
 uvicorn src.api.main:app --reload --host 0.0.0.0 --port 8000
@@ -618,6 +623,24 @@ Once running, access the system through your web browser:
    - Allows typing any SMILES string, viewing 3D WebGL rotating conformers, switching between benchmark drug presets, and executing Think-on-Graph RAG queries.
 2. **Interactive OpenAPI Swagger Documentation:** Open **[http://localhost:8000/docs](http://localhost:8000/docs)**  
    - Allows testing all REST endpoints directly in the browser with full schema validation.
+
+#### 6.5.2 One-Command Containerized Deployment (Docker)
+The system is fully containerized using a multi-stage `Dockerfile` (Python 3.11-slim with RDKit native graphics libraries and non-root security) and `docker-compose.yml`:
+* **Standalone Execution (Default)**:
+  ```bash
+  docker compose up --build
+  ```
+* **Full-Stack Enterprise Stack (with Neo4j and Qdrant)**:
+  ```bash
+  docker compose --profile full up --build
+  ```
+
+#### 6.5.3 Interactive 3D Conformer Studio Engineering
+The WebGL molecular viewer ([`ui/`](file:///c:/Users/Sakshi/Desktop/ML-Prof.%20Vishwash/Project%203%20RAG/ChiralGraph-RAG/ui/)) incorporates advanced client-side graphics handling:
+* **Multi-Layer Scroll-Wheel Neutralization**: Prototype-level method override and capture-phase DOM interception ensure mouse wheel scrolling is decoupled from canvas zooming, preserving mouse drag exclusively for smooth 3D spatial rotation.
+* **Discrete 5% Step Zooming**: Zoom is strictly bounded between **50% and 150%** with 5% increment buttons (`+5%` / `−5%`) and instant baseline centering (`100%`).
+* **Fullscreen Cinematic Maximize**: A dedicated **`⛶ Maximize`** mode dynamically expands the WebGL viewport to fill the entire display (`100vw × 100vh`) with automatic aspect ratio recalculation via `viewer3d.resize()`.
+* **Zero-Stale Caching**: Serves assets through `NoCacheStaticFiles` with version query busting to prevent stale browser disk caching.
 
 ---
 

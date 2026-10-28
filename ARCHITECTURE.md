@@ -101,7 +101,85 @@ Inspired by Sun et al. (*Think-on-Graph*, ICLR 2024) and Wen et al. (*MindMap*):
 
 ---
 
-## 4. Dual-Mode Deployment Strategy
+---
+
+## 4. Web Application & 3D Conformer Studio Architecture
+
+```mermaid
+flowchart LR
+    subgraph Browser Client
+        UI[Clean White & Brick Red Dashboard]
+        Viewer3D[3Dmol.js WebGL Engine]
+        ZoomControl[Discrete Zoom Controller: 50%-150%]
+        MaxView[Fullscreen / Maximize Viewport Engine]
+    end
+
+    subgraph FastAPI Gateway
+        App[FastAPI Async Server]
+        NoCache[NoCacheStaticFiles Middleware]
+        ChemEndpoint[/api/v1/cheminformatics/analyze]
+        GraphEndpoint[/api/v1/graph/drug]
+        RAGEndpoint[/api/v1/rag/query]
+    end
+
+    UI --> App
+    NoCache --> UI
+    App --> ChemEndpoint & GraphEndpoint & RAGEndpoint
+    ChemEndpoint -->|SDF MolBlock + MMFF94 Strain| Viewer3D
+    ZoomControl -->|Clamped Scale Factor| Viewer3D
+    MaxView -->|Dynamic Resize: 100vw x 100vh| Viewer3D
+```
+
+### 4.1 Client-Side WebGL Conformer Studio (`ui/`)
+* **3Dmol.js WebGL Visualization**: Renders true 3D molecular structures derived from RDKit ETKDG v3 distance geometry and MMFF94 force field optimization.
+* **Scroll-Wheel Event Isolation**: To prevent erratic scaling and accidental page jumps, mouse wheel zoom is permanently neutralized at both the `$3Dmol.GLViewer.prototype._handleMouseScroll` prototype level and via capture-phase DOM interception.
+* **Deterministic Discrete Zoom**:
+  * Zoom is controlled strictly via a dedicated slider and `+` / `−` step buttons bounded between **50% and 150%** (100% standard baseline framing).
+  * Step increment is standardized to **5%** (`+5%` and `−5%`).
+  * Smooth camera centering resets to standard baseline coordinates.
+* **Fullscreen / Maximize View Mode**:
+  * Clicking **`⛶ Maximize`** expands the 3D WebGL viewport into a full-screen cinematic overlay (`100vw × 100vh`).
+  * Automatically recalculates aspect ratios via `viewer3d.resize()`.
+  * Allows keyboard dismissal via the `Escape` key or the **`🗗 Minimize`** button.
+* **Cache-Busting Delivery**:
+  * Implements `NoCacheStaticFiles` in FastAPI and versioned script tags (`?v=...`) to ensure development hot-reloads and client-side updates are immediately reflected without stale browser disk caching.
+
+---
+
+## 5. Production Containerization & Orchestration Architecture
+
+```mermaid
+flowchart TD
+    subgraph Docker Compose Multi-Profile Stack
+        direction TB
+        subgraph Core Service
+            AppContainer[chiralgraph-rag-app: Python 3.11-slim]
+            AppContainer -->|Exposes Port 8000| HostPort[Host: http://localhost:8000]
+        end
+
+        subgraph Full Stack Profile: --profile full
+            Neo4jContainer[(chiralgraph-neo4j: Neo4j 5.15 Community)]
+            QdrantContainer[(chiralgraph-qdrant: Qdrant v1.7.4)]
+            Neo4jContainer -->|Bolt: 7687, HTTP: 7474| AppContainer
+            QdrantContainer -->|REST: 6333, gRPC: 6334| AppContainer
+        end
+    end
+```
+
+### 5.1 Multi-Stage Containerfile (`Dockerfile`)
+* **Base Layer**: `python:3.11-slim` (Debian Bookworm) providing an optimal balance between low attack surface and pre-compiled wheel compatibility.
+* **System Graphics & Scientific Libraries**: Installs `libxrender1`, `libxext6`, `libsm6`, and `libglib2.0-0` to ensure headless RDKit 2D/3D coordinate generation and format conversions function without runtime shared-library missing errors.
+* **Layer Caching**: `requirements.txt` is installed in an isolated layer prior to copying application source code.
+* **Non-Root Execution**: Runs under a dedicated `appuser` (UID 1000) for hardened container security.
+* **Automated Healthcheck**: Periodically probes `http://localhost:8000/health` every 30 seconds with a 10-second startup grace period.
+
+### 5.2 Compose Profiles (`docker-compose.yml`)
+* **Default Mode (Standalone)**: Runs `chiralgraph-rag` in zero-dependency offline mode with NetworkX and in-memory vector storage.
+* **Full Stack Profile (`--profile full`)**: Automatically provisions and networks persistent `neo4j` (with volume mounts) and `qdrant` vector database containers.
+
+---
+
+## 6. Dual-Mode Deployment Strategy
 
 To ensure seamless execution across any environment:
 1. **Offline / In-Memory Mode (Zero Setup)**:

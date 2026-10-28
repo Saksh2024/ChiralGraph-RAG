@@ -9,9 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 ### Planned
-- Interactive 3D molecular conformer viewer using 3Dmol.js in frontend web UI.
 - Direct automated ChEMBL / PubChem REST API ingestion pipeline.
 - End-to-end Ragas evaluation dashboard comparing Naive RAG vs. Think-on-Graph ChiralGraph-RAG on larger 100+ query sets.
+
+---
+
+## [0.2.0] - 2026-10-28
+### Added
+- **Production Docker Containerization**:
+  - Multi-stage [`Dockerfile`](Dockerfile) based on `python:3.11-slim` with RDKit native graphics libraries (`libxrender1`, `libxext6`, `libsm6`, `libglib2.0-0`), layer caching, and non-root security (`appuser`).
+  - [`docker-compose.yml`](docker-compose.yml) supporting both zero-setup offline mode and optional full-stack profile (`--profile full`) provisioning Neo4j and Qdrant.
+  - [`.dockerignore`](.dockerignore) and updated [`.gitignore`](.gitignore) excluding large demonstration video files (`*.mp4`) and cache artifacts.
+- **Interactive 3D WebGL Molecular Conformer Studio (`ui/`)**:
+  - Implemented 3D molecular structure rendering via 3Dmol.js driven by RDKit ETKDG v3 distance geometry and MMFF94 force field strain ranking.
+  - Added **Fullscreen / Maximize View** (`⛶ Maximize` / `🗗 Minimize`) allowing full-window `100vw × 100vh` inspection with `Escape` key shortcut.
+  - Standardized discrete zoom controls to **5% step intervals** strictly clamped between **50% and 150%** (100% baseline).
+  - Multi-layer neutralization of scroll-wheel zooming (prototype override + DOM capture interception) ensuring mouse drag is dedicated exclusively to smooth 3D rotation.
+- **Comprehensive Run Guide (`RUN_GUIDE.md`)**:
+  - Detailed step-by-step documentation for environment setup, configuration modes, containerized execution, interactive UI features, and REST API examples.
+- **MTP Academic Project Report (`MTP_REPORT.md`)**:
+  - 10-chapter academic dissertation report covering the 2D stereochemical blindspot, biophysical algorithms, Think-on-Graph guarded reasoning, and quantitative benchmarking results.
+- **Anti-Caching Asset Pipeline**:
+  - Added `NoCacheStaticFiles` in FastAPI backend and cache-busting script versioning (`?v=...`) to ensure browser updates reflect instantly.
 
 ---
 
