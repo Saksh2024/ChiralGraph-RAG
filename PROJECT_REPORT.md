@@ -1,10 +1,8 @@
-**Degree Program:** Bachelor of Technology / Master of Technology in Computer Science & Engineering (Specialization in Artificial Intelligence & Machine Learning)  
-**Course:** Major Project / Capstone Project (MTP)  
-**Laboratory:** Machine Learning & Computational Biology Research Group  
-**Supervision:** Prof. Vishwash  
-**Student / Candidate:** Sakshi  
-**Academic Year:** 2026–2027  
-**Project Repository:** `Project 3 RAG / ChiralGraph-RAG`  
+# PROJECT REPORT: ChiralGraph-RAG
+
+---
+
+# ChiralGraph-RAG: A 3D Conformation and Stereoisomer-Aware Hybrid GraphRAG Engine for Precision Drug Discovery
 
 ---
 
